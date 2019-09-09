@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.tianhui.chartdemo.dao.IAddressMapper">
+
+    <insert id="insertOrUpdateAddress"  parameterType="com.tianhui.chartdemo.bean.AddressEntity">
+        INSERT INTO
+        th_users_address
+        (id,user_id,receiver,contact_number,province,city,classify,detail_address,comment)
+        VALUES
+        (#{id},#{user_id},#{receiver},#{contact_number},#{province},#{city},#{classify},#{detail_address},#{comment})
+        ON DUPLICATE KEY UPDATE
+        `receiver` = IF(#{receiver} is null or #{receiver} = "",receiver,#{receiver}),
+        contact_number = IF(#{contact_number} = null or #{contact_number} = "",contact_number,#{contact_number}),
+        province = IF(#{province} is null or #{province} = "",province,#{province}),
+        city = IF(#{city} is null or #{city} = "",city,#{city}),
+        classify = IF(#{classify} is null or #{classify} = "",classify,#{classify}),
+        detail_address = IF(#{detail_address} = null or #{detail_address} = "",detail_address,#{detail_address}),
+        comment = IF(#{comment} is null or #{comment} = "",city,#{comment})
+    </insert>
+
+
+    <select id="queryAddressByUserId" resultType="com.tianhui.chartdemo.bean.AddressEntity" parameterType="java.lang.String">
+        SELECT
+        tua.id,tua.receiver,tua.contact_number,tua.province,tua.city,tua.classify,tua.detail_address,tua.comment,
+        IF(user.common_id = tua.id,1,0) is_default
+        FROM th_users_address tua
+        LEFT JOIN th_users user ON user.id = #{user_id}
+        WHERE
+        tua.user_id = #{user_id}
+        ORDER BY is_default DESC
+    </select>
+
+
+    <delete id="deleteAddress" parameterType="java.util.Map" >
+        DELETE
+        FROM
+        th_users_address
+        WHERE
+        user_id = #{user_id}
+        AND
+        id in
+        <foreach collection="ids" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="queryById" resultType="com.tianhui.chartdemo.bean.AddressEntity" parameterType="java.lang.String">
+        SELECT
+        id,receiver,contact_number,province,city,classify,detail_address,comment
+        FROM th_users_address
+        WHERE
+        id = #{id}
+    </select>
+
+    <select id="queryUsersCount" resultType="java.lang.Integer" parameterType="java.lang.String">
+        SELECT
+        count(id)
+        FROM th_users_address
+        WHERE
+        user_id = #{user_id}
+    </select>
+
+</mapper>

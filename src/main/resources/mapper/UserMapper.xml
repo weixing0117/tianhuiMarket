@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.tianhui.chartdemo.dao.IUserMapper">
+
+    <insert id="createUser"  parameterType="com.tianhui.chartdemo.po.UserPO">
+        INSERT INTO
+        th_users
+        (id,name,password,nickname,gender,icon_url,telephone,open_id,created_on,total_expense,common_id,role_id,`desc`,access_token,refresh_token)
+        VALUES
+        (#{id},#{name},#{password},IFNULL(#{nickname},#{name}),#{gender},#{icon_url},#{telephone},#{open_id},now(),#{total_expense},#{common_id},102,#{desc},#{access_token},#{refresh_token})
+    </insert>
+
+
+    <select id="queryUser" resultType="com.tianhui.chartdemo.vo.UserVO" parameterType="java.util.Map">
+        SELECT
+        user.id,user.name,user.nickname,user.gender,user.icon_url,user.telephone,user.created_on,user.total_expense,user.desc,user.access_token,
+        tur.name role_name,tua.detail_address common_address,user.common_id
+        FROM th_users user
+        LEFT JOIN th_users_address tua ON tua.user_id = user.id AND tua.id = user.common_id
+        INNER JOIN th_user_role tur ON tur.id = user.role_id
+        WHERE
+        1=1
+        <if test = "id != null ">
+            AND user.id = #{id}
+        </if>
+        <if test = "name != null and name != '' ">
+            AND LOCATE(#{name},user.nickname)
+        </if>
+        <if test = "telephone != null ">
+            AND user.telephone = #{telephone}
+        </if>
+        <if test = "openId != null and openId != '' ">
+            AND user.open_id = #{openId}
+        </if>
+        <if test = "start != null and pageSize != null ">
+            limit #{start},#{pageSize}
+        </if>
+    </select>
+
+    <select id="queryUserCount" resultType="int" parameterType="java.util.Map">
+        SELECT
+        count(id)
+        FROM
+        th_users
+        WHERE
+        1=1
+        <if test = "id != null ">
+            AND id = #{id}
+        </if>
+        <if test = "name != null and name != '' ">
+            AND LOCATE(#{name},name)
+        </if>
+        <if test = "telephone != null ">
+            AND telephone = #{telephone}
+        </if>
+        <if test = "openId != null and openId != '' ">
+            AND open_id = #{openId}
+        </if>
+    </select>
+
+    <update id="updateUser" parameterType="java.util.Map" >
+        UPDATE
+        th_users
+        SET
+        nickname = #{nickname},
+        gender = #{gender},
+        <if test = "can_edit != null and can_edit =1">
+            telephone = #{telephone},
+        </if>
+        <if test = "total_expense != null ">
+            total_expense = #{total_expense},
+        </if>
+        <if test = "common_id != null ">
+            common_id = #{common_id},
+        </if>
+        <if test = "role_id != null ">
+            role_id = #{role_id},
+        </if>
+        <if test = "access_token != null and access_token != ''">
+            access_token = #{access_token},
+        </if>
+        <if test = "refresh_token != null and refresh_token != ''">
+            refresh_token = #{refresh_token},
+        </if>
+        icon_url = #{icon_url}
+        WHERE
+        id = #{id}
+    </update>
+
+
+    <select id="queryUserById" resultType="com.tianhui.chartdemo.vo.UserVO">
+        SELECT
+        user.id,user.name,user.nickname,user.gender,user.icon_url,user.telephone,user.created_on,user.total_expense,user.desc,user.access_token,user.refresh_token,
+        tur.name role_name,tua.detail_address common_address,user.common_id
+        FROM th_users user
+        LEFT JOIN th_users_address tua ON tua.user_id = user.id AND tua.id = user.common_id
+        INNER JOIN th_user_role tur ON tur.id = user.role_id
+        WHERE
+        1=1
+        <if test = "id != null ">
+            AND user.id = #{id}
+        </if>
+
+        <if test = "telephone != null ">
+            AND user.telephone = #{telephone}
+        </if>
+        <if test = "openId != null and openId != '' ">
+            AND user.open_id = #{openId}
+        </if>
+        limit 1
+    </select>
+
+    <select id="login" resultType="java.lang.String">
+        SELECT
+        id
+        FROM th_users
+        WHERE
+        `name` = #{username}
+        AND
+        password = #{password}
+        limit 1
+    </select>
+
+    <select id="isAdmin" parameterType="java.lang.String" resultType="java.lang.Boolean">
+        SELECT
+        count(id)
+        FROM th_users
+        WHERE
+        id = #{id}
+        AND
+        role_id in (100,101)
+    </select>
+
+
+    <update id="updateCommonAddress" parameterType="java.lang.String" >
+        UPDATE
+        th_users
+        SET
+        common_id = #{addressId}
+        WHERE
+        id = #{id}
+    </update>
+
+</mapper>

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.tianhui.chartdemo.dao.IBasicGoodsMapper">
+
+    <insert id="createOrUpdateBasicGoods"  parameterType="com.tianhui.chartdemo.po.GoodsPO">
+        INSERT INTO
+        th_goods_warehouse
+        (id,name,subject,icon,type,detail_desc,unit,created_on,default_price)
+        VALUES
+        (#{id},#{name},IF(#{subject} = null or #{subject} ='',#{default_price},#{subject}),#{icon},#{type},#{detail_desc},#{unit},now(),#{default_price})
+        ON DUPLICATE KEY UPDATE
+        `name` = IF(#{name} = null or #{name} ="",name,#{name}),
+        subject = IF(#{subject} = null or #{subject} ="",subject,#{subject}),
+        icon = IF(#{icon} = null or #{icon} ="",icon,#{icon}),
+        type = IF(#{type} = null or #{type} ="",type,#{type}),
+        detail_desc = IF(#{detail_desc} = null or #{detail_desc} ="",detail_desc,#{detail_desc}),
+        unit = IF(#{unit} = null or #{unit} ="",unit,#{unit}),
+        update_on = now(),
+        default_price = IF(#{default_price} = null or #{default_price} =0,default_price,#{default_price})
+    </insert>
+
+
+    <select id="queryBasicGoods" resultType="com.tianhui.chartdemo.vo.GoodsVO" parameterType="java.util.Map">
+        SELECT
+        goods.id,goods.name,goods.subject,goods.icon,
+        te.name type,se.name status,goods.detail_desc,goods.unit,goods.default_price,goods.stock,
+        goods.start_time,goods.end_time,goods.default_price,goods.current_price,goods.created_on
+        FROM th_goods_warehouse goods
+        INNER JOIN th_enumeration te ON te.id = goods.type
+        INNER JOIN th_enumeration se ON se.id = goods.status
+        WHERE
+        goods.flag in
+        (
+        <foreach collection="flag" index="index" item="item" separator=",">
+            #{item}
+        </foreach>
+        )
+        <if test = "id != null ">
+            AND goods.id = #{id}
+        </if>
+        <if test = "name != null and name != '' ">
+            AND LOCATE(#{name},goods.name)
+        </if>
+        <if test = "type != null and type.size()>0 ">
+            AND goods.type in (
+            <foreach collection="type" index="index" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test = "status != null and status.size()>0 ">
+            AND goods.status in (
+            <foreach collection="status" index="index" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test="sort != null and sort != '' ">
+            order by ${sort}
+        </if>
+        <if test = "start != null and pageSize != null ">
+            limit #{start},#{pageSize}
+        </if>
+    </select>
+
+    <select id="queryBasicGoodsCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+        SELECT
+        count(id)
+        FROM th_goods_warehouse
+        WHERE
+        flag in
+        (
+        <foreach collection="flag" index="index" item="item" separator=",">
+            #{item}
+        </foreach>
+        )
+        <if test = "id != null ">
+            AND id = #{id}
+        </if>
+        <if test = "name != null and name != '' ">
+            AND LOCATE(#{name},name)
+        </if>
+        <if test = "type != null and type.size()>0 ">
+            AND type in (
+            <foreach collection="type" index="index" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+        <if test = "status != null and status.size()>0 ">
+            AND status in (
+            <foreach collection="status" index="index" item="item" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+    </select>
+
+    <update id="changeBasicGoodsFlag" >
+        UPDATE
+        th_goods_warehouse
+        SET
+        flag = #{flag}
+        WHERE
+        FIND_IN_SET(id,#{ids})
+    </update>
+
+    <select id="queryBasicInfo" resultType="com.tianhui.chartdemo.vo.GoodsVO" parameterType="java.util.Map">
+        SELECT
+        goods.id,goods.name,goods.subject,goods.icon,
+        te.name type,se.name status,goods.detail_desc,goods.unit,goods.default_price,goods.stock,
+        goods.start_time,goods.end_time,goods.default_price,goods.current_price,goods.created_on
+        FROM th_goods_warehouse goods
+        INNER JOIN th_enumeration te ON te.id = goods.type
+        INNER JOIN th_enumeration se ON se.id = goods.status
+        WHERE
+        goods.flag IN
+        (
+        <foreach collection="flag" index="index" item="item" separator=",">
+            #{item}
+        </foreach>
+        )
+        AND id = #{id}
+    </select>
+
+    <update id="updateGoods"  parameterType="com.tianhui.chartdemo.po.GoodsPO">
+        UPDATE
+        th_goods_warehouse
+        SET
+        current_price = IF(#{current_price} IS NULL OR current_price &lt;=0,default_price,#{current_price}),
+        <if test = "status != null and status == 11">
+            stock = #{stock},
+            start_time = now(),
+            end_time = IF(#{end_time} is not null AND #{end_time} != "",#{end_time},DATE_ADD(now(),INTERVAL 1 MONTH)),
+        </if>
+        <if test = "status != null and status == 12">
+            stock = #{stock},
+            start_time = #{start_time},
+            end_time = IF(#{end_time} is not null AND #{end_time} != "",#{end_time},DATE_ADD(now(),INTERVAL 1 MONTH)),
+        </if>
+        <if test = "status != null and status == 13">
+            stock = 0,
+            end_time = now(),
+        </if>
+        status = #{status}
+        WHERE
+        id = #{id}
+        AND flag = 1
+    </update>
+
+    <update id="updateGoodsStock"  parameterType="java.util.List">
+            UPDATE
+            th_goods_warehouse
+            SET
+            stock =
+            <foreach collection="list" item="item" index="index" open="CASE id" close="END">
+                WHEN #{item.goods_id} THEN (stock - #{item.quantity})
+            </foreach>
+            WHERE
+            id IN
+            <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+             #{item.goods_id}
+            </foreach>
+            AND
+            <foreach collection="list" item="item" index="index" open="CASE id" close="END">
+                    WHEN #{item.goods_id} THEN (stock - #{item.quantity})>=0
+            </foreach>
+
+    </update>
+
+</mapper>

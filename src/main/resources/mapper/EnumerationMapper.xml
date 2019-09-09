@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.tianhui.chartdemo.dao.IEnumerationMapper">
+
+    <insert id="createOrUpdateEnum"  parameterType="com.tianhui.chartdemo.bean.EnumerationEntity">
+        INSERT INTO
+        th_enumeration
+        (id,name,subject,type,remark)
+        VALUES
+        (#{id},#{name},#{subject},#{type},#{remark})
+        ON DUPLICATE KEY UPDATE
+        `name` = IF(#{name} = null or #{name} ="",name,#{name}),
+        subject = IF(#{subject} = null or #{subject} ="",subject,#{subject}),
+        type = IF(#{type} = null or #{type} ="",type,#{type}),
+        remark = IF(#{remark} = null or #{remark} = "",remark,#{remark})
+    </insert>
+
+
+    <select id="queryEnum" resultType="com.tianhui.chartdemo.bean.EnumerationEntity" parameterType="java.util.Map">
+        SELECT
+        id,name,subject,type,remark
+        FROM th_enumeration
+        WHERE
+        1=1
+        <if test = "id != null ">
+            AND id = #{id}
+        </if>
+
+        <if test = "type != null and type != '' ">
+            AND type = #{type}
+        </if>
+
+    </select>
+
+
+    <delete id="deleteEnum" parameterType="int" >
+        DELETE
+        FROM
+        th_enumeration
+        WHERE
+        id = #{id}
+    </delete>
+
+</mapper>

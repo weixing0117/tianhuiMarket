@@ -1,0 +1,58 @@
+server:
+  port: 12306
+  servlet:
+    context-path: /tianhuiMarket/
+spring:
+  http:
+    encoding:
+      enabled: true
+      charset: UTF-8
+  application:
+    name: tianhuiMarket
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/th_for_market?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=UTC&useAffectedRows=true
+    password: NePIawUV7CH5tUcPdLsTtg==
+    username: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    maxWait: 10000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 1 FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+mybatis:
+  mapper-locations:
+    - classpath:mapper/*.xml
+  configuration:
+    cache-enabled: true
+
+swagger:
+  host: th.duckccg.com
+
+weChartParam:
+  name: weixing
+  appID: pFUgXkcSXuu2bVFrC+5h1lWMtPPkTl2kwWwVRRsgEEI=
+  appSecret: 9RLg4M3hAQEM9paWTwfaZbPSw4ahGD69uJENaKM+toYdQjerDe7XfzW5hq6Z0usV
+  tokenUrl: https://api.weixin.qq.com/sns/oauth2/access_token?
+  refreshUrl: https://api.weixin.qq.com/sns/oauth2/refresh_token?
+  userInfoUrl: https://api.weixin.qq.com/sns/userinfo?
+  checkUrl: https://api.weixin.qq.com/sns/auth?
+  path: /usr/local/java/cipher_key
+druidConfig:
+  initialSize: 5
+  minIdle: 5
+  maxActive: 20
+  maxWait: 10000
+  timeBetweenEvictionRunsMillis: 60000
+  minEvictableIdleTimeMillis: 300000
+  validationQuery: SELECT 1 FROM DUAL
+  testWhileIdle: true
+  testOnBorrow: false
+  testOnReturn: false
+  poolPreparedStatements: true

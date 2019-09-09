@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.tianhui.chartdemo.dao.IOrderMapper">
+
+    
+    <resultMap id="orderMap" type="com.tianhui.chartdemo.vo.OrderVO">
+            <id property="id" column="id" javaType="java.lang.String"></id>
+            <result property="user_name" column="user_name" javaType="java.lang.String"></result>
+            <result property="desc" column="desc" javaType="java.lang.String"></result>
+            <result property="comment" column="comment" javaType="java.lang.String"></result>
+            <result property="contact" column="contact" javaType="java.lang.String"></result>
+            <result property="contact_number" column="contact_number" javaType="java.lang.String"></result>
+            <result property="total_cost" column="total_cost" javaType="java.lang.String"></result>
+            <result property="total_number" column="total_number" javaType="java.lang.Integer"></result>
+            <result property="contact_address" column="contact_address" javaType="java.lang.String"></result>
+            <result property="created_on" column="created_on" javaType="java.lang.String"></result>
+            <result property="status" column="status" javaType="java.lang.String"></result>
+            <result property="end_time" column="end_time" javaType="java.lang.String"></result>
+        <collection property="orderInfoList" javaType="java.util.List" ofType="com.tianhui.chartdemo.bean.OrderInfoBean">
+            <id property="goods_id" column="goods_id" javaType="java.lang.Integer"></id>
+            <result property="goods_name" column="goods_name" javaType="java.lang.String"></result>
+            <result property="goods_unit" column="goods_unit" javaType="java.lang.String"></result>
+            <result property="goods_subject" column="goods_subject" javaType="java.lang.String"></result>
+            <result property="quantity" column="quantity" javaType="java.lang.Integer"></result>
+            <result property="unit_price" column="unit_price" javaType="java.math.BigDecimal"></result>
+            <result property="goods_icon" column="goods_icon" javaType="java.lang.String"></result>
+            <result property="count_price" column="count_price" javaType="java.math.BigDecimal"></result>
+        </collection>
+    </resultMap>
+
+    <resultMap id="orderMapLimit" type="com.tianhui.chartdemo.vo.OrderVO">
+        <id property="id" column="id" javaType="java.lang.String"></id>
+        <result property="user_name" column="user_name" javaType="java.lang.String"></result>
+        <result property="desc" column="desc" javaType="java.lang.String"></result>
+        <result property="comment" column="comment" javaType="java.lang.String"></result>
+        <result property="contact" column="contact" javaType="java.lang.String"></result>
+        <result property="contact_number" column="contact_number" javaType="java.lang.String"></result>
+        <result property="total_cost" column="total_cost" javaType="java.lang.String"></result>
+        <result property="total_number" column="total_number" javaType="java.lang.Integer"></result>
+        <result property="contact_address" column="contact_address" javaType="java.lang.String"></result>
+        <result property="created_on" column="created_on" javaType="java.lang.String"></result>
+        <result property="status" column="status" javaType="java.lang.String"></result>
+        <result property="end_time" column="end_time" javaType="java.lang.String"></result>
+        <collection property="orderInfoList" select="queryOrderGoods" ofType="com.tianhui.chartdemo.bean.OrderInfoBean" column="id">
+            <id property="order_id" column="order_id" javaType="java.lang.Integer"></id>
+            <result property="goods_id" column="goods_id" javaType="java.lang.Integer"></result>
+            <result property="goods_name" column="goods_name" javaType="java.lang.String"></result>
+            <result property="goods_unit" column="goods_unit" javaType="java.lang.String"></result>
+            <result property="goods_subject" column="goods_subject" javaType="java.lang.String"></result>
+            <result property="quantity" column="quantity" javaType="java.lang.Integer"></result>
+            <result property="unit_price" column="unit_price" javaType="java.math.BigDecimal"></result>
+            <result property="goods_icon" column="goods_icon" javaType="java.lang.String"></result>
+            <result property="count_price" column="count_price" javaType="java.math.BigDecimal"></result>
+        </collection>
+    </resultMap>
+
+    <select id="queryOrderGoods" resultType="java.util.Map" parameterType="java.lang.String">
+            SELECT
+            tog.quantity quantity,tog.unit_price unit_price,tog.goods_id goods_id,tgw.name goods_name,tog.order_id,
+            tgw.unit goods_unit,tgw.subject goods_subject,tgw.icon goods_icon,tog.quantity*tog.unit_price count_price
+            FROM
+            th_order_goods tog
+            INNER JOIN
+            th_goods_warehouse tgw ON tgw.id = tog.goods_id
+            WHERE
+            tog.order_id = #{id}
+    </select>
+
+    <select id="queryOrder" resultMap="orderMapLimit" parameterType="java.util.Map">
+        SELECT
+        tof.id id,user.nickname user_name,tof.desc 'desc' ,tof.comment comment,tof.contact contact,
+        tof.contact_number contact_number, tof.total_cost total_cost,tof.total_number total_number,
+        tof.created_on created_on,tof.end_time end_time,te.name status,tof.contact_address
+        FROM th_order_form tof
+        LEFT JOIN th_users user ON user.id = tof.user_id
+        LEFT JOIN th_enumeration te ON te.id = tof.status
+        WHERE
+        1=1
+        <if test = "user_id != null and user_id !='' ">
+            AND tof.user_id = #{user_id}
+        </if>
+        <if test = "id != null and id != '' ">
+            AND tof.id = #{id}
+        </if>
+        <if test = "status != null  ">
+            AND tof.status = #{status}
+        </if>
+        <if test = "user_name != null and user_name != '' ">
+            AND LOCATE(#{user_name},user.nickname)
+        </if>
+        <if test = "contact != null and contact != '' ">
+            AND LOCATE(#{contact},tof.contact)
+        </if>
+        <if test = "telephone != null and telephone != '' ">
+            AND tof.contact_number = #{telephone}
+        </if>
+        <choose>
+            <when test=" sort != null and sort != '' ">
+                ORDER BY #{sort}
+            </when >
+            <when test=" status == 25 or status == 26">
+                ORDER BY end_time DESC
+            </when >
+            <when test=" status == null ">
+                ORDER BY status ASC,created_on DESC
+            </when >
+            <otherwise>
+                ORDER BY created_on DESC
+            </otherwise>
+        </choose>
+        <if test = "start != null and pageSize != null ">
+            limit #{start},#{pageSize}
+        </if>
+    </select>
+
+
+
+<!--    <select id="queryOrder" resultMap="orderMap" parameterType="java.util.Map">
+        SELECT
+        tof.id id,user.nickname user_name,tof.desc 'desc' ,tof.comment comment,tof.contact contact,
+        tof.contact_number contact_number, tof.total_cost total_cost,tof.total_number total_number,
+        tof.created_on created_on,tof.end_time end_time,te.name status,tog.goods_id goods_id,tof.contact_address,
+        tgw.name goods_name,tgw.unit goods_unit,tgw.subject goods_subject,tgw.icon goods_icon,
+        tog.quantity quantity,tog.unit_price unit_price,tog.quantity*tog.unit_price count_price
+        FROM th_order_form tof
+        LEFT JOIN th_users user ON user.id = tof.user_id
+        JOIN th_order_goods tog ON tog.order_id = tof.id
+        LEFT JOIN th_goods_warehouse tgw ON tog.goods_id = tgw.id
+        LEFT JOIN th_enumeration te ON te.id = tof.status
+        WHERE
+        1=1
+        <if test = "user_id != null and user_id !='' ">
+            AND tof.user_id = #{user_id}
+        </if>
+        <if test = "id != null and id != '' ">
+            AND tof.id = #{id}
+        </if>
+        <if test = "status != null  ">
+            AND tof.status = #{status}
+        </if>
+        <if test = "user_name != null and user_name != '' ">
+            AND LOCATE(#{user_name},user.nickname)
+        </if>
+        <if test = "contact != null and contact != '' ">
+            AND LOCATE(#{contact},tof.contact)
+        </if>
+        <if test = "telephone != null and telephone != '' ">
+            AND tof.contact_number = #{telephone}
+        </if>
+        <choose>
+            <when test=" sort != null and sort != '' ">
+                ORDER BY #{sort}
+            </when >
+            <when test=" status == 25 or status == 26">
+                ORDER BY end_time DESC
+            </when >
+            <when test=" status == null ">
+                ORDER BY status ASC,created_on DESC
+            </when >
+            <otherwise>
+                ORDER BY created_on DESC
+            </otherwise>
+        </choose>
+        <if test = "start != null and pageSize != null ">
+            limit #{start},#{pageSize}
+        </if>
+    </select>-->
+
+
+    <select id="queryOrderCount"  resultType="java.lang.Integer" parameterType="java.util.Map">
+        SELECT
+        count(DISTINCT tof.id)
+        FROM th_order_form tof
+        LEFT JOIN th_users user ON user.id = tof.user_id
+        JOIN th_order_goods tog ON tog.order_id = tof.id
+        LEFT JOIN th_goods_warehouse tgw ON tog.goods_id = tgw.id
+        LEFT JOIN th_enumeration te ON te.id = tof.status
+        WHERE
+        1=1
+        <if test = "user_id != null and user_id !='' ">
+            AND tof.user_id = #{user_id}
+        </if>
+
+        <if test = "id != null and id != '' ">
+            AND tof.id = #{id}
+        </if>
+        <if test = "user_name != null and user_name != '' ">
+            AND LOCATE(#{user_name},user.nickname)
+        </if>
+        <if test = "contact != null and contact != '' ">
+            AND LOCATE(#{contact},tof.contact)
+        </if>
+        <if test = "telephone != null and telephone != '' ">
+            AND tof.contact_number = #{telephone}
+        </if>
+        <if test = "status != null  ">
+            AND tof.status = #{status}
+        </if>
+    </select>
+
+   <insert id="createOrder"  parameterType="com.tianhui.chartdemo.po.OrderPO">
+        INSERT INTO
+        th_order_form
+        (id,user_id,status,comment,contact,contact_number,total_cost,contact_address,created_on,total_number)
+        VALUES
+        (#{id},#{user_id},21,#{comment},#{contact},#{contact_number},#{total_cost},#{contact_address},now(),#{total_number})
+    </insert>
+
+    <insert id="createConnection" parameterType="java.util.List">
+        INSERT INTO
+        th_order_goods
+        (goods_id,order_id,unit_price,quantity)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator="," >
+        (#{item.goods_id},#{item.order_id},#{item.unit_price},#{item.quantity})
+        </foreach>
+    </insert>
+
+    <update id="updateOrderInfoForUser" parameterType="com.tianhui.chartdemo.po.OrderPO">
+        UPDATE
+        th_order_goods
+        SET
+        <if test = "comment != null and comment != '' ">
+            comment = #{comment},
+        </if>
+        <if test = "contact != null and contact != '' ">
+            contact = #{contact},
+        </if>
+        <if test = "contact_number != null and contact_number != '' ">
+            contact_number = #{contact_number},
+        </if>
+        <if test = "contact_address != null and contact_address != '' ">
+            contact_address = #{contact_address},
+        </if>
+        <if test = "status != null and status == 26">
+            status = #{status},
+        </if>
+        id = id
+        WHERE
+        id = #{id}
+    </update>
+
+    <select id="queryBaseOrder" parameterType="java.lang.String" resultType="com.tianhui.chartdemo.po.OrderPO">
+        SELECT
+        id,user_id,status
+        FROM th_order_form
+        WHERE
+        id = #{id}
+    </select>
+
+    <update id="cancelOrder" parameterType="com.tianhui.chartdemo.po.OrderPO">
+        UPDATE
+        th_order_form
+        SET
+        <if test = "comment != null and comment != '' ">
+            comment = #{comment},
+        </if>
+        status = 26,
+        end_time = now()
+        WHERE
+        id = #{id}
+    </update>
+
+    <update id="updateOrderStatus"  parameterType="com.tianhui.chartdemo.po.OrderPO">
+        UPDATE
+        th_order_form
+        SET
+        <if test = "desc != null and desc != '' ">
+            `desc` = #{desc},
+        </if>
+        <if test =" status == 25 ">
+            end_time = now(),
+        </if>
+        status = #{status}
+        WHERE
+        id = #{id}
+    </update>
+
+
+
+</mapper>

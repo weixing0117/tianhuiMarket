@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.tianhui.chartdemo.dao.IBasketMapper">
+
+    <insert id="createBasketOrUpdate"  parameterType="java.util.List">
+        INSERT INTO
+        th_shopping_trolley
+        (goods_id,total_number,user_id)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator="," >
+        (
+            #{item.goods_id},IF(#{item.total_number} is null or #{item.total_number} = 0,1,#{item.total_number}),#{item.user_id}
+        )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        total_number = IF(values(total_number) is null OR values(total_number) = 0 ,total_number,values(total_number))
+    </insert>
+
+
+    <insert id="InsertIntoBasket"  parameterType="com.tianhui.chartdemo.bean.BasketEntity">
+        INSERT INTO
+        th_shopping_trolley
+        (goods_id,total_number,user_id)
+        VALUES
+            (
+            #{goods_id},IFNULL(#{total_number},1),#{user_id}
+            )
+        ON DUPLICATE KEY UPDATE
+        total_number = total_number + 1
+    </insert>
+
+    <select id="queryBasket" resultType="com.tianhui.chartdemo.bean.BasketEntity" parameterType="java.lang.String">
+        SELECT
+        basket.user_id,basket.total_number,tgw.id goods_id,
+        tgw.name goods_name,tgw.subject goods_subject,tgw.icon goods_icon,te.name goods_type,tgw.default_price goods_unit,tgw.current_price goods_current_price
+        FROM th_shopping_trolley basket
+        LEFT JOIN th_goods_warehouse tgw ON basket.goods_id = tgw.id
+        LEFT JOIN th_enumeration te ON tgw.type = te.id
+        WHERE
+        basket.user_id = #{user_id}
+    </select>
+
+    <delete id="clearBasket" parameterType="java.lang.String">
+        DELETE
+        FROM
+        th_shopping_trolley
+        WHERE
+        user_id = #{user_id}
+    </delete>
+
+
+    <select id="basketCount" resultType="java.lang.Integer" parameterType="java.lang.String">
+        SELECT
+        count(goods_id)
+        FROM th_shopping_trolley
+        WHERE
+        user_id = #{user_id}
+    </select>
+
+    <delete id="deleteFromBasket" parameterType="java.util.HashMap">
+        DELETE
+        FROM
+        th_shopping_trolley
+        WHERE
+        user_id = #{user_id}
+        AND
+        goods_id in
+        <foreach collection="list" index="index" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+</mapper>
